@@ -1,3 +1,5 @@
+##LAB0 of Concurrent Programming Course
+
 INTRODUCTION
 ------------
     This is an application developed to sort an input file with a list of integer elements and it exports the 
