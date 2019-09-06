@@ -1,13 +1,34 @@
+/**
+ * @\file   helper.c
+ * @\author Sorabh Gandhi
+ * @\brief  This file contains the definition all the application specific helper functions
+ * @\date   09/05/2019
+ *
+ */
+
+/* System Headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
-
 #include <sys/stat.h>
 
+/* Own Headers */
 #include "helper.h"
 
+
+/**
+-----------------------------------------------------------------------------------------------------
+is_textfile
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function checks if the input file is a text file with .txt extention or not
+*
+*   @\param argv    Input filename
+*
+*   @\return    On Success it returns 'True', else it returns 'False' 
+*
+*/
 bool is_textfile (char *argv)
 {
     int str_len = strlen(argv);
@@ -23,9 +44,27 @@ bool is_textfile (char *argv)
 }
 
 
+/**
+-----------------------------------------------------------------------------------------------------
+arg_parser
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function parses the runtime command line arguments and populates the content in 
+*           the argument handler structure.
+*
+*   @\param argc            [INPUT]     Count of total number of arguments
+*
+*           argv            [INPUT]     2d char array containing all arguments
+*
+*           arg_handler_t   [OUTPUT]    Pointer to the arg_handler structure
+*
+*   @\return    On Sucess it returns 0, if the input arg contains '--name' then it returns 1
+*               On Failure it returns -1;
+*
+*           
+*/
 int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 {
-    if ((argc < 1) || (argc > 4)) {
+    if ((argc < 2) || (argc > 4)) {
         printf("Usage -> ./sort [--name] inputfile.txt -o outputfile.txt\n");
         return -1;
     }
@@ -42,12 +81,26 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
             printf("Enter a valid input filename with '.txt' as the extension\n");
             return -1;
         } else {
-            struct stat st;
+            char *buffer = NULL;
+            size_t temp = 0;
+            
+            int element = 0;
             arg_handler_t->ifile = argv[1];
-            stat(arg_handler_t->ifile, &st);
-            arg_handler_t->f_size = st.st_size;
+            
+            FILE *ptr;
+            ptr = fopen(arg_handler_t->ifile, "r");
 
-            printf("The input filename is %s and size = %d\n", arg_handler_t->ifile, arg_handler_t->f_size);
+            if (ptr == NULL) {
+                printf("Error in opening the input file\n");
+                return -1;
+            }
+
+            while (getline(&buffer, &temp, ptr) != -1)
+            {
+                element++;
+            }
+
+            arg_handler_t->f_size = element;
         }
     }
 
@@ -60,7 +113,7 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
                 
                 arg_handler_t->ofile = argv[3];
                 arg_handler_t->print_on_console = false;
-                printf("The output filename is %s\n", arg_handler_t->ofile);
+                //printf("The output filename is %s\n", arg_handler_t->ofile);
             } else {
                 printf("Enter a valid output filename with '.txt' as the extension\n");
                 return -1;
@@ -80,12 +133,27 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 }
 
 
+/**
+-----------------------------------------------------------------------------------------------------
+insert_elements_to_array
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function reads all the elements from the input file and copies to the array
+*
+*   @\param arg_handler_t   [input]     Pointer to the arg_handler structure
+*           
+*           list            [output]    Integer array that will be populated with list of elements
+*
+*   @\return    On Sucess it returns 0;
+*               On Failure it returns -1.
+*
+*
+*/
 int insert_elements_to_array(struct arg_handler arg_handler_t, int list[])
 {
     int i = 0;
     FILE *fp;
 
-    printf("The input filename is %s and size = %d\n", arg_handler_t.ifile, arg_handler_t.f_size);
+    //printf("The input filename is %s and size = %d\n", arg_handler_t.ifile, arg_handler_t.f_size);
     fp = fopen(arg_handler_t.ifile, "r");
 
     if (fp == NULL) {
@@ -93,7 +161,7 @@ int insert_elements_to_array(struct arg_handler arg_handler_t, int list[])
         return -1;
     }
 
-    for (i = 0; i < (arg_handler_t.f_size / 2); i++)
+    for (i = 0; i < (arg_handler_t.f_size); i++)
     {
         fscanf(fp, "%d", &list[i]);
     }
@@ -104,6 +172,21 @@ int insert_elements_to_array(struct arg_handler arg_handler_t, int list[])
 }
 
 
+/**
+-----------------------------------------------------------------------------------------------------
+insert_elements_to_file
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function reads all the elements from the input array and copies it to the output file
+*
+*   @\param arg_handler_t   [input]     Pointer to the arg_handler structure
+*
+*           list            [input]     Integer array with list of elements
+*
+*   @\return    On Sucess it returns 0;
+*               On Failure it returns -1.
+*
+*
+*/
 int insert_elements_to_file(struct arg_handler arg_handler_t, int list[])
 {
     int i = 0;
@@ -116,7 +199,7 @@ int insert_elements_to_file(struct arg_handler arg_handler_t, int list[])
         return -1;
     }
 
-    for (i = 0; i < (arg_handler_t.f_size / 2); i++)
+    for (i = 0; i < (arg_handler_t.f_size); i++)
     {
         fprintf(fp, "%d\n", list[i]);
     }
@@ -124,4 +207,31 @@ int insert_elements_to_file(struct arg_handler arg_handler_t, int list[])
     fclose(fp);
 
     return 0;
+}
+
+
+/**
+-----------------------------------------------------------------------------------------------------
+print_to_console
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function prints all the elements of the array to stdout
+*
+*   @\param list            [input]     Integer array with list of elements
+*
+*   @\return    void
+*
+*
+*/
+
+void print_to_console (struct arg_handler arg_handler_t, int list[])
+{
+    int j = 0;
+    int elements = (arg_handler_t.f_size);
+    
+    printf("The sorted array is\n");
+
+    for (j = 0; j < elements; j++)
+    {
+        printf("%d\n", list[j]);
+    }
 }

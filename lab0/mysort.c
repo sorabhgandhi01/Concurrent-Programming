@@ -1,12 +1,42 @@
+/**
+ * @\file   mysort.c
+ * @\author Sorabh Gandhi
+ * @\brief  This file contains the implementation of merge sort algorithm
+ * @\date   09/05/2019
+ *
+ * @\reference  https://www.geeksforgeeks.org/merge-sort/
+ *
+ */
+
+
+/* System Headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
 
+/* Own Headers */
 #include "mysort.h"
 
 
+/**
+-----------------------------------------------------------------------------------------------------
+merge
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function performs an merge of subarrays and arranges the elements in ascending order
+*
+*	@\param arr[]   Input array of elements
+*
+*	        start   Position of the first element in the input array
+*
+*	        mid     Position of the middle element in the input array
+*
+*	        end     Position of the last element in the input array
+*
+*	@\return    void
+*
+*/
 void merge (int arr[], int start, int mid, int end)
 {
     int i, j, k = 0;
@@ -68,6 +98,22 @@ void merge (int arr[], int start, int mid, int end)
 }
 
 
+/**
+-----------------------------------------------------------------------------------------------------
+mergesort
+-----------------------------------------------------------------------------------------------------
+*   @\brief This function recursively divides the array into pieces and then call the merge
+*           function to re-arrange them in the main input array
+*
+*   @\param arr[]   Input array of elements
+*
+*           start   Position of the first element in the input array
+*
+*           end     Position of the last element in the input array
+*
+*   @\return    void
+*
+*/
 void mergesort (int arr[], int start, int end)
 {
     if (start < end)
