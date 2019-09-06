@@ -35,11 +35,11 @@ CHOICE OF ALGORITHM
 
     I have choose merge sort for this application due to the following reasons,
 
-1.) MergeSort is stable by design, equal elements keep their original order.
+    1.) MergeSort is stable by design, equal elements keep their original order.
 
-2.) MergeSort is well suited to be implemented parallel (multithreading).
+    2.) MergeSort is well suited to be implemented parallel (multithreading).
 
-3.) MergeSort uses (about 30%) less comparisons than QuickSort. This is an often overlooked 
-advantage, because a comparison can be quite expensive.
+    3.) MergeSort uses (about 30%) less comparisons than QuickSort. This is an often overlooked 
+    advantage, because a comparison can be quite expensive.
 
-Apart from all this, Merge sort has a guaranteed upper limit of time complexity O(nlogn).
+    Apart from all this, Merge sort has a guaranteed upper limit of time complexity O(nlogn).
