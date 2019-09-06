@@ -1,4 +1,5 @@
-##LAB0 of Concurrent Programming Course
+LAB0 of Concurrent Programming Course
+-------------------------------------
 
 INTRODUCTION
 ------------
@@ -29,7 +30,7 @@ BUILD INSTRUCTION AND RUN STEPS
     1.) Go to the project directory using the command - cd lab0
     2.) Run "make" inorder to build the project
     3.) Run the executable - mysort with appropriate command-line arguments
-    4.) Run "make clean" inorder to clean the directory and remove all the object files and textfiles
+    4.) Run "make clean" inorder to clean the directory and remove all the object files and exe
 
 
 CHOICE OF ALGORITHM
