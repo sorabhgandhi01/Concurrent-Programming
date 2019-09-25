@@ -33,6 +33,8 @@ SOFTWARE.
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <set> 
+#include <iterator> 
 
 /* C Headers */
 #include <stdio.h>
@@ -45,6 +47,8 @@ SOFTWARE.
 /* Own Headers */
 #include "helper.h"
 #include "mysort.h"
+
+using namespace std;
 
 struct task {
 
@@ -66,9 +70,11 @@ pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
 
 //function declaration
 int get_bucket_range(int arr[], int size, int thread);
-void bucketSort(void *arg);
+void *bucketSort(void *arg);
 
-using namespace std;
+
+
+vector <multiset <int32_t> > B;
 
 int get_bucket_range(int arr[], int size, int thread)
 {
@@ -83,7 +89,7 @@ int get_bucket_range(int arr[], int size, int thread)
     return divider;
 }
 
-void bucketSort(void *arg) {
+void *bucketSort(void *arg) {
    
 	struct bucket_task *btsk = (struct bucket_task *) arg;
 	int i = 0, j = 0;
@@ -99,11 +105,13 @@ void bucketSort(void *arg) {
 			pthread_mutex_unlock(&lock1);
 		}
 	}
+
+	return 0;
 }
 
 void *merge_sort123(void *arg)
 {
-    struct task *tsk = arg;
+    struct task *tsk = (struct task *)arg;
     int low;
     int high;
 
@@ -150,7 +158,7 @@ int main (int argc, char **argv)
     }
 
 	if (arg_handler_t.algos == 0) {
-
+		printf("Executing merge sort\n");
 		struct task *tsk;
 		struct task tsklist[arg_handler_t.thread];
 		int len = (array_size / arg_handler_t.thread);
@@ -189,8 +197,8 @@ int main (int argc, char **argv)
 		}
 
 	} else {
-
-		int i = 0, j = 0, k = 0;
+		printf("Executing bucket sort\n");
+		int i = 0, k = 0;
 		struct bucket_task btsk[arg_handler_t.thread];
 		int divider = get_bucket_range(list, array_size, arg_handler_t.thread);
 		B.resize(arg_handler_t.thread);
@@ -216,10 +224,12 @@ int main (int argc, char **argv)
             pthread_join(threads[i], NULL);
         }
 
-		for (i = 0; i < B.size(); i++) {
-			for (std::multiset<int>::iterator j=B[i].begin(); j != B[i].end(); ++j)
+		int vec_len = (int)B.size();
+
+		for (i = 0; i < vec_len; i++) {
+			for (std::multiset<int>::iterator j = B[i].begin(); j != B[i].end(); ++j)
 			{
-				list[k] = *j	
+				list[k] = *j;
 				k++;
 			}
 		}

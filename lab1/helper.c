@@ -79,8 +79,8 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
     static struct option opt[] =
     {
         {"name", no_argument, 0, 'n'},
-        {"object", no_argument, 0, 'o'},
-        {"thread", no_argument, 0, 't'},
+        {"object", required_argument, 0, 'o'},
+        {"thread", optional_argument, 0, 't'},
         {"alg", required_argument, 0, 'a'},
         {0, 0, 0, 0}
     };
@@ -100,13 +100,13 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
                 return 1;
 
             case 'o':
-				arg_handler_t->ofile = argv[3];
+				arg_handler_t->ofile = optarg;
 				arg_handler_t->print_on_console = false;
                 printf("The output filename is %s\n", arg_handler_t->ofile);
                 break;
 
             case 't':
-				arg_handler_t->thread = atoi(argv[5]);
+				arg_handler_t->thread = atoi(optarg);
 				printf("The number of thread is %d\n", arg_handler_t->thread);
                 break;
 
