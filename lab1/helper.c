@@ -146,7 +146,8 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 
 	arg_handler_t->f_size = element;
 	printf("Total number of elements = %d\n", element);
-	
+
+	free(buffer);
 	fclose(ptr);
 
 #if 0

@@ -28,7 +28,13 @@ SOFTWARE.
  *
  */
 
-/* System Headers */
+/* C++ headers */
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <algorithm>
+
+/* C Headers */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +53,53 @@ struct task {
 	int task_high;
 	int *list;
 };
+
+struct bucket_task {
+
+	int task_no;
+	int task_div;
+	int task_size;
+	int *list;
+};
+
+pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
+
+//function declaration
+int get_bucket_range(int arr[], int size, int thread);
+void bucketSort(void *arg);
+
+using namespace std;
+
+int get_bucket_range(int arr[], int size, int thread)
+{
+    int max = 0, bucket = 0, divider = 0;
+
+	bucket = thread;
+
+    //find max
+    max = *max_element(arr, arr + size);
+    divider = ceil(float(max + 1) / bucket);
+
+    return divider;
+}
+
+void bucketSort(void *arg) {
+   
+	struct bucket_task *btsk = (struct bucket_task *) arg;
+	int i = 0, j = 0;
+  
+	//insert element into bucket
+	for (i = 0; i < btsk->task_size; i++) {
+		j = floor( btsk->list[i] / btsk->task_div );
+
+		if (btsk->task_no == j)
+		{
+			pthread_mutex_lock(&lock1);
+			B[j].insert((btsk->list)[i]);
+			pthread_mutex_unlock(&lock1);
+		}
+	}
+}
 
 void *merge_sort123(void *arg)
 {
@@ -73,7 +126,6 @@ void *merge_sort123(void *arg)
 int main (int argc, char **argv)
 {
     struct arg_handler arg_handler_t = {"Sorabh Gandhi"};
-	struct task *tsk;
 
     int ret_status = arg_parser(argc, argv, &arg_handler_t);    //parse the input argument
 
@@ -91,17 +143,18 @@ int main (int argc, char **argv)
     int list[array_size];   //Initialize an array with set number of elements
 
 	pthread_t threads[arg_handler_t.thread];
-    struct task tsklist[arg_handler_t.thread];
-
-	int len = (array_size / arg_handler_t.thread);
-	int i = 0, low = 0;
 
     /*Read integers from the file and store in local array*/
     if (insert_elements_to_array(arg_handler_t, list) != 0) {
         exit(-1);
     }
 
-	if (arg_handler_t->algos == 0) {
+	if (arg_handler_t.algos == 0) {
+
+		struct task *tsk;
+		struct task tsklist[arg_handler_t.thread];
+		int len = (array_size / arg_handler_t.thread);
+		int i = 0, low = 0;
 
 		for (i = 0; i < arg_handler_t.thread; i++, low += len) {
 
@@ -119,23 +172,57 @@ int main (int argc, char **argv)
 
 
 		// creating 4 threads
-		for (int i = 0; i < arg_handler_t.thread; i++) {
+		for (i = 0; i < arg_handler_t.thread; i++) {
 			tsk = &tsklist[i];
 			pthread_create(&threads[i], NULL, merge_sort123, tsk);
 		}
 
     		// joining all 4 threads
-		for (int i = 0; i < arg_handler_t.thread; i++) {
+		for (i = 0; i < arg_handler_t.thread; i++) {
 			pthread_join(threads[i], NULL);
 		}
 
 		struct task *tskm = &tsklist[0];
-		for (int i = 1; i < arg_handler_t.thread; i++) {
+		for (i = 1; i < arg_handler_t.thread; i++) {
 			struct task *tsk = &tsklist[i];
 			merge(tsk->list, tskm->task_low, tsk->task_low - 1, tsk->task_high);
 		}
 
 	} else {
+
+		int i = 0, j = 0, k = 0;
+		struct bucket_task btsk[arg_handler_t.thread];
+		int divider = get_bucket_range(list, array_size, arg_handler_t.thread);
+		B.resize(arg_handler_t.thread);
+
+		for (i = 0; i < arg_handler_t.thread; i++) {
+			
+			btsk[i].task_div = divider;
+			btsk[i].task_no = i;
+			btsk[i].task_size = array_size;
+			btsk[i].list = list;
+
+			if ((pthread_create(&threads[i], NULL, bucketSort, (void *)&btsk[i])) != 0)
+			{
+				printf("Error on creating the thread\n");
+				exit(1);
+			} else {
+				printf("Creating thread %d\n", i);
+			}
+
+		}
+
+		for (i = 0; i < arg_handler_t.thread; i++) {
+            pthread_join(threads[i], NULL);
+        }
+
+		for (i = 0; i < B.size(); i++) {
+			for (std::multiset<int>::iterator j=B[i].begin(); j != B[i].end(); ++j)
+			{
+				list[k] = *j	
+				k++;
+			}
+		}
 
 	}
 
