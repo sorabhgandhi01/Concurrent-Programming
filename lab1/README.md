@@ -6,6 +6,12 @@
     sorted list into an output file or prints it on the console. This application can parallely sort the list using
 	merge and bucket sort individually.
 
+INTRODUCTION
+------------
+    This is an application developed to parallely sort an input file with a list of integer elements and it 
+    exports the sorted list into an output file or prints it on the console. This application can parallely 
+    sort the list using merge and bucket sort individually.
+
 ### CODE ORGANIZATION
 
 
@@ -13,17 +19,22 @@
     |
     |----main.c			-   This is the main application file that contains the sequential flow of operations
 	|						and the API declaration and definition for bucket sort 
+    |----main.c		-   This is the main application file that contains the sequential flow of operations
     |
-    |----helper.c		-   This file contains definition of all the helper functions to parse the command 
-    |                   	line argument, read the elements from file and populate sorted elements to the file
+    |----helper.c	-   This file contains definition of all the helper functions to parse the command 
+    |                       line argument, read the elements from file and populate sorted elements to the file
     |
-    |----helper.h		-   This file contains declaration of all the helper functions
+    |----helper.h	-   This file contains declaration of all the helper functions
     |
     |----mergesort.c	-   This file contains the implementation of the merge sort algorithm
     |
     |----mergesort.h	-   This file contains the definition of merge sort functions
     |
-    |----Makefile		-   This file contains the project build and cleanup script
+    |----bucketsort.c	-	This file contains the implementation of the bucket sort algorithm
+    |
+    |----bucketsort.h	-	This file contains the definition of bucket sort function
+    |
+    |----Makefile	-   This file contains the project build and cleanup script
 
 
 ### BUILD INSTRUCTION AND RUN STEPS
