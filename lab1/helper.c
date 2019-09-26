@@ -90,7 +90,9 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
     	printf("The input filename is %s\n", arg_handler_t->ifile);
 	}
 
-    while ((c = getopt_long(argc, argv, "nota:", opt, 0)) != -1)
+	arg_handler_t->print_on_console = false;
+
+    while ((c = getopt_long(argc, argv, "n:o:t:a:", opt, 0)) != -1)
     {
 
         switch (c)
@@ -101,7 +103,7 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 
             case 'o':
 				arg_handler_t->ofile = optarg;
-				arg_handler_t->print_on_console = false;
+				arg_handler_t->print_on_console = true;
                 printf("The output filename is %s\n", arg_handler_t->ofile);
                 break;
 

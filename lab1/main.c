@@ -68,6 +68,9 @@ struct bucket_task {
 
 pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_barrier_t bar;
+struct timespec start, end1;
+
 //function declaration
 int get_bucket_range(int arr[], int size, int thread);
 void *bucketSort(void *arg);
@@ -93,27 +96,44 @@ void *bucketSort(void *arg) {
    
 	struct bucket_task *btsk = (struct bucket_task *) arg;
 	int i = 0, j = 0;
+
+	pthread_barrier_wait(&bar);
+    if(btsk->task_no == 0){
+        clock_gettime(CLOCK_MONOTONIC,&start);
+    }
+    pthread_barrier_wait(&bar);
+
+	printf("Executing thread %d\n", (btsk->task_no + 1));
   
 	//insert element into bucket
 	for (i = 0; i < btsk->task_size; i++) {
 		j = floor( btsk->list[i] / btsk->task_div );
 
-		if (btsk->task_no == j)
-		{
+		//if (btsk->task_no == j)
+		//{
 			pthread_mutex_lock(&lock1);
 			B[j].insert((btsk->list)[i]);
 			pthread_mutex_unlock(&lock1);
-		}
 	}
+
+	pthread_barrier_wait(&bar);
 
 	return 0;
 }
 
 void *merge_sort123(void *arg)
 {
-    struct task *tsk = (struct task *)arg;
+	struct task *tsk = (struct task *)arg;
     int low;
     int high;
+
+	pthread_barrier_wait(&bar);
+	if(tsk->task_no == 0){
+		clock_gettime(CLOCK_MONOTONIC,&start);
+	}
+	pthread_barrier_wait(&bar);
+
+	printf("Executing thread %d\n", (tsk->task_no + 1));
 
     // calculating low and high
     low = tsk->task_low;
@@ -157,6 +177,12 @@ int main (int argc, char **argv)
         exit(-1);
     }
 
+	//Assign one thread if the coomand line thread input is 0 or less than 0
+	if (arg_handler_t.thread <= 0) {
+		arg_handler_t.thread = 1;
+	}
+
+	//Check for merge sort
 	if (arg_handler_t.algos == 0) {
 		printf("Executing merge sort\n");
 		struct task *tsk;
@@ -164,6 +190,9 @@ int main (int argc, char **argv)
 		int len = (array_size / arg_handler_t.thread);
 		int i = 0, low = 0;
 
+		pthread_barrier_init(&bar, NULL, arg_handler_t.thread);
+		
+		//populate the structure with all input arg for thread handler
 		for (i = 0; i < arg_handler_t.thread; i++, low += len) {
 
 			tsk = &tsklist[i];
@@ -182,11 +211,17 @@ int main (int argc, char **argv)
 		// creating 4 threads
 		for (i = 0; i < arg_handler_t.thread; i++) {
 			tsk = &tsklist[i];
-			pthread_create(&threads[i], NULL, merge_sort123, tsk);
+			if ((pthread_create(&threads[i], NULL, merge_sort123, tsk)) != 0) {
+				printf("Error on creating the thread\n");
+                exit(1);
+			} else {
+				printf("Creating thread %d\n", (i+1));
+			}
 		}
 
     		// joining all 4 threads
 		for (i = 0; i < arg_handler_t.thread; i++) {
+			printf("Joining thread %d\n", (i+1));
 			pthread_join(threads[i], NULL);
 		}
 
@@ -196,31 +231,52 @@ int main (int argc, char **argv)
 			merge(tsk->list, tskm->task_low, tsk->task_low - 1, tsk->task_high);
 		}
 
+		clock_gettime(CLOCK_MONOTONIC, &end1);
+
+		pthread_barrier_destroy(&bar);
+
 	} else {
 		printf("Executing bucket sort\n");
 		int i = 0, k = 0;
 		struct bucket_task btsk[arg_handler_t.thread];
 		int divider = get_bucket_range(list, array_size, arg_handler_t.thread);
 		B.resize(arg_handler_t.thread);
+		int len = (array_size / arg_handler_t.thread);
+		int m = 0;
+
+		pthread_barrier_init(&bar, NULL, arg_handler_t.thread);
 
 		for (i = 0; i < arg_handler_t.thread; i++) {
+
+			m = i*len;
+
+			if (i == (arg_handler_t.thread - 1)) {
+
+				btsk[i].task_div = divider;
+                btsk[i].task_no = i;
+                btsk[i].task_size = (array_size - m);
+                btsk[i].list = &list[m];
+					
+			} else {
 			
-			btsk[i].task_div = divider;
-			btsk[i].task_no = i;
-			btsk[i].task_size = array_size;
-			btsk[i].list = list;
+				btsk[i].task_div = divider;
+				btsk[i].task_no = i;
+				btsk[i].task_size = len;
+				btsk[i].list = &list[m];
+			}
 
 			if ((pthread_create(&threads[i], NULL, bucketSort, (void *)&btsk[i])) != 0)
 			{
 				printf("Error on creating the thread\n");
 				exit(1);
 			} else {
-				printf("Creating thread %d\n", i);
+				printf("Creating thread %d\n", (i+1));
 			}
 
 		}
 
 		for (i = 0; i < arg_handler_t.thread; i++) {
+			printf("Joining thread %d\n", (i+1));
             pthread_join(threads[i], NULL);
         }
 
@@ -233,7 +289,9 @@ int main (int argc, char **argv)
 				k++;
 			}
 		}
+		clock_gettime(CLOCK_MONOTONIC,&end1);
 
+		pthread_barrier_destroy(&bar);
 	}
 
 #if 0 
@@ -242,12 +300,18 @@ int main (int argc, char **argv)
 #endif
 
     //Check if output is required to print on console or in a file
-    if (!(arg_handler_t.print_on_console))
+    if ((arg_handler_t.print_on_console))
     {
         insert_elements_to_file(arg_handler_t, list);
     } else {
         print_to_console(arg_handler_t, list);
     }
+
+	unsigned long long elapsed_ns;
+	elapsed_ns = (end1.tv_sec-start.tv_sec)*1000000000 + (end1.tv_nsec-start.tv_nsec);
+	printf("Elapsed (ns): %llu\n",elapsed_ns);
+	double elapsed_s = ((double)elapsed_ns)/1000000000.0;
+	printf("Elapsed (s): %lf\n",elapsed_s);
 
     return 0;
 }
