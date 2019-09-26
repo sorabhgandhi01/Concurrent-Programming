@@ -17,7 +17,7 @@ INTRODUCTION
 
     lab0
     |
-    |----main.c			-   This is the main application file that contains the sequential flow of operations
+    |----main.c		-   This is the main application file that contains the sequential flow of operations
 	|						and the API declaration and definition for bucket sort 
     |----main.c		-   This is the main application file that contains the sequential flow of operations
     |
@@ -26,13 +26,9 @@ INTRODUCTION
     |
     |----helper.h	-   This file contains declaration of all the helper functions
     |
-    |----mergesort.c	-   This file contains the implementation of the merge sort algorithm
+    |----mergesort.c-   This file contains the implementation of the merge sort algorithm
     |
-    |----mergesort.h	-   This file contains the definition of merge sort functions
-    |
-    |----bucketsort.c	-	This file contains the implementation of the bucket sort algorithm
-    |
-    |----bucketsort.h	-	This file contains the definition of bucket sort function
+    |----mergesort.h-   This file contains the definition of merge sort functions
     |
     |----Makefile	-   This file contains the project build and cleanup script
 
