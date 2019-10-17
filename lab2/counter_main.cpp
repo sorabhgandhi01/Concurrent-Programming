@@ -55,6 +55,8 @@ struct timespec start, end1;
 struct arg_count_handler arg_handler_t = {"Sorabh Gandhi"};
 bar_t sense_barrier;
 pthread_barrier_t bar;
+MCSLock my_mcs_lock;
+atomic<Node*> tail{NULL};
 
 extern pthread_mutex_t mutex_lock;
 extern pthread_barrier_t pth_barr;
@@ -73,7 +75,7 @@ void sense_rev_barrier ()
 
 	int cnt_cpy = sense_barrier.cnt.fetch_add(1);
 	if (cnt_cpy == arg_handler_t.thread) {
-		sense_barrier.cnt.store(0, memory_order_relaxed);
+		sense_barrier.cnt.store(1, memory_order_relaxed);
 		sense_barrier.sense.store(my_sense);
 	} else {
 		while (sense_barrier.sense.load() != my_sense);
@@ -133,17 +135,30 @@ void* thread_main(void* args){
     for (i = 0; i < (arg_handler_t.iteration * arg_handler_t.thread); i++)
     {
     	if ((i % arg_handler_t.thread) == tid) {
-    		if (arg_handler_t.is_lock_set) {
+    		
+    		if ((arg_handler_t.is_lock_set) && (strcmp(arg_handler_t.lock, "mcs") == 0)) {
+    			//printf("Using MCS lock Count = %d\n", count);
+    			Node *mynode = new Node;
+    			my_mcs_lock.acquire(mynode);
+    			count++;
+    			my_mcs_lock.release(mynode);
+    		}
+    		else if (arg_handler_t.is_lock_set) {
     			lock();
     			count++;
     			unlock();
-    		} else {
-    			count++;
     		}
 
+
     		if (arg_handler_t.is_barrier_set) {
-    			barrier();
+    			count++;
+    			//printf("Waiting at bar Count = %d 	%d\n", count, tid);
+    			//barrier();
     		}
+    	}
+
+    	if (arg_handler_t.is_barrier_set) {	
+    		barrier();
     	}
     }
 
@@ -161,6 +176,7 @@ int main (int argc, char **argv)
     
     int ret_status = arg_count_parser(argc, argv, &arg_handler_t);
     int i = 0;
+    sense_barrier.cnt = 1;
     /*If the arguments are incorrect*/
     if (ret_status == -1) {
         exit(-1);
@@ -179,16 +195,20 @@ int main (int argc, char **argv)
     	arg_handler_t.iteration = 1;
     }
 
-	if (arg_handler_t.is_barrier_set == arg_handler_t.is_lock_set) {
+	if ((arg_handler_t.is_barrier_set == 1) && (arg_handler_t.is_lock_set == 1)) {
     	printf("Invard arg: Both lock and barrier is set\n");
     	exit(0);
     }
     else if (arg_handler_t.is_lock_set) {
+    	if ((strcmp(arg_handler_t.lock, "mcs")) == 0) {
+    		TEST_NUM = 0;
+    	} else {
     	for (i = 0; (i < (NUM_FUNCS/2)); i++) {
     		if (strcmp(arg_handler_t.lock, func_names_lock[i]) == 0) {
     			TEST_NUM = i;
     		}
     	}
+    }
     }
     else if (arg_handler_t.is_barrier_set) {
     	if (arg_handler_t.barrier) {

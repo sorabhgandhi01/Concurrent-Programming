@@ -18,13 +18,21 @@ struct arg_handler{
 
     char *ofile;        //Output file name
 
+    char *lock;			//lock name
+
     int f_size;         //Size of the file
 
 	int thread;			//Number of threads
 
+	bool barrier;		//0 for sense and 1 for pthread
+
 	bool algos;			// 0 for merge and 1 for bucket sort
 
     bool print_on_console; //Indicator to print output
+
+    bool is_barrier_set;	//Barrier set indicator
+
+    bool is_lock_set;		//Lock set indicator
 };
 
 

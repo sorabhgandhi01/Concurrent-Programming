@@ -46,6 +46,7 @@ SOFTWARE.
 
 /* Own Headers */
 #include "helper.h"
+#include "lock.h"
 
 using namespace std;
 
@@ -62,14 +63,36 @@ pthread_mutex_t lock1 = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_barrier_t bar;
 struct timespec start, end1;
+struct arg_handler arg_handler_t = {"Sorabh Gandhi"};
+
+int TEST_NUM = 0;
+vector <multiset <int32_t> > B;
+char lockname[] = "pthread";
+MCSLock my_mcs_lock;
+atomic<Node*> tail{NULL};
 
 //function declaration
 int get_bucket_range(int arr[], int size, int thread);
 void *bucketSort(void *arg);
 
+const int NUM_FUNCS = 8;
+void (*funcs_lock[NUM_FUNCS])()  = {
+    tas_lock,
+    ttas_lock,
+    ticket_lock,
+    pthread_lock,
+    tas_unlock,
+    ttas_unlock,
+    ticket_unlock,
+    pthread_unlock
+};
 
-
-vector <multiset <int32_t> > B;
+const char* func_names_lock[NUM_FUNCS/2] = {
+    "tas",
+    "ttas",
+    "ticket",
+    "pthread"
+};
 
 int get_bucket_range(int arr[], int size, int thread)
 {
@@ -89,8 +112,16 @@ void *bucketSort(void *arg) {
 	struct bucket_task *btsk = (struct bucket_task *) arg;
 	int i = 0, j = 0;
 
+	void (*lock)() = funcs_lock[TEST_NUM];
+    void (*unlock)() = funcs_lock[TEST_NUM + 4];
+
 	pthread_barrier_wait(&bar);
     if(btsk->task_no == 0){
+    	if ((strcmp(func_names_lock[TEST_NUM], "pthread") == 0)) {
+    		if (pthread_mutex_init(&lock1, NULL) != 0) {
+    			printf("Mutex init failed\n");
+    		}
+    	}
         clock_gettime(CLOCK_MONOTONIC,&start);
     }
     pthread_barrier_wait(&bar);
@@ -101,11 +132,17 @@ void *bucketSort(void *arg) {
 	for (i = 0; i < btsk->task_size; i++) {
 		j = floor( btsk->list[i] / btsk->task_div );
 
-		//if (btsk->task_no == j)
-		//{
-			pthread_mutex_lock(&lock1);
+		if ((arg_handler_t.is_lock_set) && (strcmp(arg_handler_t.lock, "mcs") == 0)) {
+			Node *mynode = new Node;
+			my_mcs_lock.acquire(mynode);
 			B[j].insert((btsk->list)[i]);
-			pthread_mutex_unlock(&lock1);
+			my_mcs_lock.release(mynode);
+		}
+		else {
+			lock();
+			B[j].insert((btsk->list)[i]);
+			unlock();
+		}
 	}
 
 	pthread_barrier_wait(&bar);
@@ -115,8 +152,8 @@ void *bucketSort(void *arg) {
 
 int main (int argc, char **argv)
 {
-    struct arg_handler arg_handler_t = {"Sorabh Gandhi"};
-
+    
+    int i = 0, k = 0;
     int ret_status = arg_parser(argc, argv, &arg_handler_t);    //parse the input argument
 
     /*If the arguments are incorrect*/
@@ -127,6 +164,23 @@ int main (int argc, char **argv)
     /*If the '--name' flag is used*/
     if (ret_status == 1) {
         exit(0);
+    }
+
+    if ((arg_handler_t.is_barrier_set) && (arg_handler_t.is_lock_set)) {
+    	printf("Invard arg: Both lock and barrier is set\n");
+    	exit(0);
+    }
+    else if (arg_handler_t.is_lock_set) {
+    	for (i = 0; (i < (NUM_FUNCS/2)); i++) {
+    		if (strcmp(arg_handler_t.lock, func_names_lock[i]) == 0) {
+    			TEST_NUM = i;
+    		}
+    	}
+    }
+    else {
+    	arg_handler_t.lock = lockname;
+    	TEST_NUM = 3;
+
     }
 
     int array_size = ((arg_handler_t.f_size));  //Calculate the number of elements in array
@@ -145,7 +199,6 @@ int main (int argc, char **argv)
 	}
 
 	printf("Executing bucket sort\n");
-	int i = 0, k = 0;
 	struct bucket_task btsk[arg_handler_t.thread];
 	int divider = get_bucket_range(list, array_size, arg_handler_t.thread);
 	B.resize(arg_handler_t.thread);
@@ -200,6 +253,10 @@ int main (int argc, char **argv)
 	clock_gettime(CLOCK_MONOTONIC,&end1);
 
 	pthread_barrier_destroy(&bar);
+
+	if ((arg_handler_t.is_lock_set) && (strcmp(arg_handler_t.lock, "pthread") == 0)) {
+		pthread_mutex_destroy(&lock1);
+	}
 	
 
     //Check if output is required to print on console or in a file

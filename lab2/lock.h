@@ -9,6 +9,47 @@
 
 using namespace std;
 
+class Node
+{
+public:
+	atomic<Node*> next;
+	atomic<bool> wait;
+};
+
+extern atomic<Node*> tail;
+
+
+class MCSLock {
+public:
+	void acquire(Node *myNode) {
+
+	Node *oldTail = tail.load();
+	myNode->next.store(NULL, memory_order_relaxed);
+	while (!tail.compare_exchange_strong(oldTail, myNode)) {
+		oldTail = tail.load();
+	}
+
+	if (oldTail != NULL) {
+		myNode->wait.store(true, memory_order_relaxed);
+		oldTail->next.store(myNode);
+		while (myNode->wait.load()) {}
+	}
+	}
+
+	void release(Node *myNode) {
+
+		Node* temp_node = myNode;
+		if (tail.compare_exchange_strong(temp_node, NULL)) {
+
+		} else {
+			while (myNode->next.load() == NULL) {}
+			myNode->next.load()->wait.store(false);
+		}
+	}
+};
+
+
+
 void tas_lock ();
 void tas_unlock ();
 

@@ -68,6 +68,7 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 
 	int c;
 	char algo[256];
+	char barrier[256];
 
     static struct option opt[] =
     {
@@ -75,6 +76,8 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
         {"object", required_argument, 0, 'o'},
         {"thread", optional_argument, 0, 't'},
         {"alg", required_argument, 0, 'a'},
+        {"bar", required_argument, 0, 'b'},
+        {"lock", required_argument, 0, 'l'},
         {0, 0, 0, 0}
     };
 
@@ -84,6 +87,8 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 	}
 
 	arg_handler_t->print_on_console = false;
+	arg_handler_t->is_barrier_set = false;
+    arg_handler_t->is_lock_set = false;
 
     while ((c = getopt_long(argc, argv, "n:o:t:a:", opt, 0)) != -1)
     {
@@ -113,6 +118,23 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 					arg_handler_t->algos = 0;
 				}
 				printf("Algorithm used is %d\n", arg_handler_t->algos);
+                break;
+
+            case 'l':
+                arg_handler_t->lock = optarg;
+                arg_handler_t->is_lock_set = true;
+                printf("The lock used is %s\n", arg_handler_t->lock);
+                break;
+
+            case 'b':
+                strcpy(barrier, optarg);
+                if (strcmp(barrier, "sense") == 0) {
+                    arg_handler_t->barrier = 0;
+                } else {
+                    arg_handler_t->barrier = 1;
+                }
+                arg_handler_t->is_barrier_set = true;
+                printf("Barrier used is %d\n", arg_handler_t->barrier);
                 break;
 
             default:
@@ -213,7 +235,7 @@ int arg_count_parser(int argc, char **argv, struct arg_count_handler *arg_handle
                 printf("The number of iteration is %d\n", arg_handler_t->iteration);
                 break;
 
-             case 'l':
+            case 'l':
                 arg_handler_t->lock = optarg;
                 arg_handler_t->is_lock_set = true;
                 printf("The lock used is %s\n", arg_handler_t->lock);

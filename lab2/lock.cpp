@@ -8,6 +8,7 @@ atomic<int> now_serving (0);
 pthread_mutex_t mutex_lock;
 pthread_barrier_t pth_barr;
 
+
 void tas_lock ()
 {
 	bool expected, changed;
