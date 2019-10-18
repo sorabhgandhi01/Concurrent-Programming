@@ -2,7 +2,8 @@
 
 ### INTRODUCTION
 
-    This is an application developed to parallely sort an input file with a list of integer elements and it exports the sorted list into an output file or prints it on the console. This application can parallely sort the list using merge and bucket sort individually.
+    This is an application developed to implement and test different types of locks like TAS, TTAS, Ticket, pthread, MCS.
+    These locks where integrated with previous lab applications and their performance were noted down.
 
 
 ### CODE ORGANIZATION
@@ -10,18 +11,19 @@
 
     lab0
     |
-    |----main.c		-   This is the main application file that contains the sequential flow operations
-	|						and the API declaration and definition for bucket sort 
-    |----main.c		-   This is the main application file that contains the sequential flow of operations
+    |----bucket_main.c	-   This is the main application file that contains the sequential flow operations
+    |			    and the API declaration and definition for bucket sort 
+    |----counter_main.c	-   This is the main application file that contains the sequential flow of operations
+    |			    for counter application
     |
     |----helper.c	-   This file contains definition of all the helper functions to parse the command 
     |                       line argument, read the elements from file and populate sorted elements to the file
     |
     |----helper.h	-   This file contains declaration of all the helper functions
     |
-    |----mergesort.c-   This file contains the implementation of the merge sort algorithm
+    |----lock.c		-   This file contains the implementation of the locks - tas, ttas, mcs, ticket and thread
     |
-    |----mergesort.h-   This file contains the definition of merge sort functions
+    |----lock.h		-   This file contains the definition of the lock functions
     |
     |----Makefile	-   This file contains the project build and cleanup script
 
@@ -64,31 +66,43 @@
 
 ### Locks and Barrier performance stats on counter application
 
-    |  Locks | Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
+    |  Locks |Run Time(s)|  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
-    | tas    | 0.007997  |  96.29%            | 1.36%                      |    236           |
-    | ttas   | 0.000802  |  94.74%            | 2.12%                      |    238           |
-    | mcs    | 40.79373  |  99.99%            | 99.99%                     |    375           |
-    | pthread| 0.261842  |  96.29%            | 97.92%                     |    231           |
+    |tas     | 0.007997  |  94.74%	      | 98.64%                     |    236           |
+    |ttas    | 0.000802  |  96.31%            | 97.88%                     |    238           |
+    |mcs     | 40.79373  |  99.99%            | 99.99%                     |    375           |
+    |pthread | 0.261842  |  96.29%            | 97.92%                     |    231           |
+    |ticket  | 56.121955 |  99.99%            | 99.99%                     |    229           |
 
     | Barrier| Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
     |sense   |170.149125 |  99.99%            | 99.99%                     |    232           |
     |pthread | 0.261842  |  87.86%            | 97.92%                     |    228           |
 
+All the above experiments are performed with 50 threads and 100 iteration.
 
 ### Locks and Barrier performance stats on bucket sort application
 
-    |  Locks | Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
+    |  Locks |Run Time(s)|  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
-    | tas    | 0.554375  |  98.46%            | 99.59%                     |    8424          |
-    | ttas   | 0.492622  |  99.26%            | 99.73%                     |    8421          |
-    | mcs    | 0.589436  |  99.40%            | 99.83%                     |    13519         |
-    | pthread| 0.848636  |  94.54%            | 98.89%                     |    8426          |
-    
+    |tas     | 0.554375  |  98.46%            | 99.59%                     |    8424          |
+    |ttas    | 0.492622  |  99.26%            | 99.73%                     |    8421          |
+    |mcs     | 0.589436  |  99.40%            | 99.83%                     |    13519         |
+    |pthread | 0.848636  |  94.54%            | 98.89%                     |    8426          |
+    |ticket  | 0.609425  |  99.47%	      | 99.82%			   |    8424	      |
+
+All the above experiments are performed with an input file consisting of 650000 elements
 
 ### Observation
 
-    1.)
+    1.) According to run-time analysis, the ticket lock and MCS lock is slower as it takes 56 and 40 seconds respectively,
+    	beacuse there are more cache misses. TTAS avoids contention miss by waiting threads by leveraging multiple read
+	copies. In ticket lock, all waiting threads have cache miss every time lock is released. MCS is also a similiar 
+	FIFO lock which uses a queue for the waiting thread.
 
-    2.) 
+    2.) Cache hit rate of ttas is greater than tas as expected. As MCS, is an improvement of both the locks, cache hit rate
+    	is even more better.
+	
+    3.) In bucket sort application, similiar performance is observed because the data is feteched from the local cache
+    
+    4.) Among barriers, the sense reveral barrier takes more time but has a higher cache hit rate
