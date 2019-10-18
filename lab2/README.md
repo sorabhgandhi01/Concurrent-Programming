@@ -62,7 +62,37 @@
 
 	6.) Then join all the threads and merge all the sub-array to the main array.
 
-### Locks performance stats on counter application
+### Locks and Barrier performance stats on counter application
 
     |  Locks | Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
+    | tas    | 0.007997  |  3.71%             | 1.36%                      |    236           |
+    | ttas   | 0.000802  |  5.26%             | 2.12%                      |    238           |
+    | mcs    | 40.79373  |                    |                            |    375           |
+    | pthread| 0.001119  |                    |                            |                  |
+
+    | Barrier| Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
+    |--------|-----------|--------------------|----------------------------|------------------|
+    | tas    | 0.007997  |  3.71%             | 1.36%                      |    236           |
+    | ttas   | 0.000802  |  5.26%             | 2.12%                      |    238           |
+
+
+### Locks and Barrier performance stats on bucket sort application
+
+    |  Locks | Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
+    |--------|-----------|--------------------|----------------------------|------------------|
+    | tas    | 0.007997  |  3.71%             | 1.36%                      |    236           |
+    | ttas   | 0.000802  |  5.26%             | 2.12%                      |    238           |
+    | mcs    | 40.79373  |                    |                            |    375           |
+    | pthread|           |                    |                            |                  |
+
+    | Barrier| Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
+    |--------|-----------|--------------------|----------------------------|------------------|
+    | tas    | 0.007997  |  3.71%             | 1.36%                      |    236           |
+    | ttas   | 0.000802  |  5.26%             | 2.12%                      |    238           |
+
+### Observation
+
+    1.)
+
+    2.) 
