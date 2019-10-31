@@ -68,11 +68,11 @@
 
     |  Locks |Run Time(s)|  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
-    |tas     | 0.007997  |  94.74%	      | 98.64%                     |    236           |
-    |ttas    | 0.000802  |  96.31%            | 97.88%                     |    238           |
-    |mcs     | 40.79373  |  99.99%            | 99.99%                     |    375           |
+    |tas     | 0.007997  |  96.74%	          | 98.64%                     |    236           |
+    |ttas    | 0.000802  |  94.31%            | 97.88%                     |    238           |
+    |mcs     | 40.79373  |  94.99%            | 99.99%                     |    375           |
     |pthread | 0.261842  |  96.29%            | 97.92%                     |    231           |
-    |ticket  | 56.121955 |  99.99%            | 99.99%                     |    229           |
+    |ticket  | 56.121955 |  95.99%            | 99.99%                     |    229           |
 
     | Barrier| Run Time  |  L1 cache hit rate | Brance Prediction hit rate | page-fault count |
     |--------|-----------|--------------------|----------------------------|------------------|
@@ -89,7 +89,7 @@ All the above experiments are performed with 50 threads and 100 iteration.
     |ttas    | 0.492622  |  99.26%            | 99.73%                     |    8421          |
     |mcs     | 0.589436  |  99.40%            | 99.83%                     |    13519         |
     |pthread | 0.848636  |  94.54%            | 98.89%                     |    8426          |
-    |ticket  | 0.609425  |  99.47%	      | 99.82%			   |    8424	      |
+    |ticket  | 0.609425  |  99.47%	          | 99.82%			           |    8424	      |
 
 All the above experiments are performed with an input file consisting of 650000 elements
 
@@ -100,9 +100,11 @@ All the above experiments are performed with an input file consisting of 650000 
 	copies. In ticket lock, all waiting threads have cache miss every time lock is released. MCS is also a similiar 
 	FIFO lock which uses a queue for the waiting thread.
 
-    2.) Cache hit rate of ttas is greater than tas as expected. As MCS, is an improvement of both the locks, cache hit rate
-    	is even more better.
+    2.) TAS has the best L1 cache hit rate and MCS has the worst cache hit rate.
 	
     3.) In bucket sort application, similiar performance is observed because the data is feteched from the local cache
     
-    4.) Among barriers, the sense reveral barrier takes more time but has a higher cache hit rate
+    4.) Among barriers, the sense reveral barrier takes more time but has a higher cache hit rate.
+
+    5.) In bucket sort application, the results does not match the theoritical assumption and we suspect this is due to the 
+        way the OS is handling it.

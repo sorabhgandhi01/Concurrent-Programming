@@ -135,6 +135,7 @@ void *bucketSort(void *arg) {
 		if ((arg_handler_t.is_lock_set) && (strcmp(arg_handler_t.lock, "mcs") == 0)) {
 			Node *mynode = new Node;
 			my_mcs_lock.acquire(mynode);
+			printf("MCS --> %d\n", btsk->task_no);
 			B[j].insert((btsk->list)[i]);
 			my_mcs_lock.release(mynode);
 		}
@@ -183,6 +184,12 @@ int main (int argc, char **argv)
 
     }
 
+    //Assign one thread if the coomand line thread input is 0 or less than 0
+	if (arg_handler_t.thread <= 0) {
+		arg_handler_t.thread = 1;
+	}
+
+
     int array_size = ((arg_handler_t.f_size));  //Calculate the number of elements in array
     int list[array_size];   //Initialize an array with set number of elements
 
@@ -193,11 +200,7 @@ int main (int argc, char **argv)
         exit(-1);
     }
 
-	//Assign one thread if the coomand line thread input is 0 or less than 0
-	if (arg_handler_t.thread <= 0) {
-		arg_handler_t.thread = 1;
-	}
-
+	
 	printf("Executing bucket sort\n");
 	struct bucket_task btsk[arg_handler_t.thread];
 	int divider = get_bucket_range(list, array_size, arg_handler_t.thread);
