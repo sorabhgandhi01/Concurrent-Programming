@@ -46,3 +46,10 @@ CHOICE OF ALGORITHM
     advantage, because a comparison can be quite expensive.
 
     Apart from all this, Merge sort has a guaranteed upper limit of time complexity O(nlogn).
+
+PARALLELIZATION STRATEGIES
+--------------------------
+	Used OpenMP API to parallelize the merge sort algorithm. I have called merge sort in two
+	different OpenMP sections and thus this creates two different threads. Finally in the
+	main thread, the merge operation merges the two output of the merge sort into a final
+	sorted list.

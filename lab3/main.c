@@ -23,7 +23,7 @@ SOFTWARE.
 /**
  * @\file	main.c
  * @\author	Sorabh Gandhi
- * @\brief	This file contains the application code for lab0 exercise 
+ * @\brief	This file contains the application code for lab3 exercise 
  * @\date	09/05/2019
  *
  */
@@ -69,13 +69,13 @@ int main (int argc, char **argv)
     {
         #pragma omp section
         {
-            printf("Thread Id = %d\n", omp_get_thread_num());
+            //printf("Thread Id = %d\n", omp_get_thread_num());
 			mergesort(list, 0, (array_size/2));
         }
 
         #pragma omp section
         {
-            printf("Thread Id = %d\n", omp_get_thread_num());
+            //printf("Thread Id = %d\n", omp_get_thread_num());
        		mergesort(list, count, (array_size - 1));
 		 }
 
