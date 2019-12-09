@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < count; i++)
 	{
-		fprintf(fp, "%d %d\n", i, i);
+		fprintf(fp, "%ld %d\n", (random() % max_limit), i);
 	}
 
 	fclose(fp);
