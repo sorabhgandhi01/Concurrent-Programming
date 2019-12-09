@@ -17,7 +17,6 @@ struct thread_info
 bst_node *g_root;
 pthread_mutex_t bst_lock;
 
-
 void *put_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -76,16 +75,36 @@ void *get_handler(void *arg)
 	}
 
     fclose(fp);	
-    
 }
 
 void *range_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
-    
-    printf("Thread = %d\n", th_info->task_no);
+    int start_key = 0, end_key = 0, i = 0;
+
+    FILE *fp = fopen(th_info->filename, "r");
+
+    if (fp == NULL) {
+		printf("Error in opening the file\n");
+		exit(0);
+	}
+
+	while ((i < th_info->task_key) && (!feof (fp))) {
+		fscanf(fp, "%d %d\n", &start_key, &end_key);
+		i++;
+	}
+
+	for (i = 0; i < th_info->task_len; i++)
+	{
+		fscanf(fp, "%d %d\n", &start_key, &end_key);
+		//printf("Invoking range query result for %d to %d\n", start_key, end_key);
+		range_querry(g_root, start_key, end_key, th_info->task_no);
+	}
+
+	fclose(fp);	
 }
 
+//./tree -i test.txt -s search.txt -r range.txt -t 10 --lock=rw_lock
 int main(int argc, char **argv)
 {
 	struct arg_handler arg;
@@ -127,16 +146,17 @@ int main(int argc, char **argv)
 			printf("Error on creating the thread\n");
 			exit(0);
 		} else {
-			//printf("Create new thread %d with length %d and start key %d\n", th_info[i].task_no, th_info[i].task_len, th_info[i].task_key);
+			//printf("Create new insert thread %d with length %d and start key %d\n", th_info[i].task_no, th_info[i].task_len, th_info[i].task_key);
 		}
 	}
 
 	length = (arg.total_search_keys/ 2);
 	m = 0;
+	int j = 0;
 
 	for (; i < (arg.thread - 2); i++) {
 		strcpy(th_info[i].filename, arg.sfile);
-		m = i*length;
+		m = j*length;
 
 		if (i == (arg.thread - 3)) {
 			th_info[i].task_no = i;
@@ -153,23 +173,25 @@ int main(int argc, char **argv)
 				printf("Error on creating the thread\n");
 				exit(0);
 		} else {
-			//printf("Create new search thread\n");
+			//printf("Create new search thread %d with length %d and start key %d\n", th_info[i].task_no, th_info[i].task_len, th_info[i].task_key);
 		}
+		j++;
 	}
 
 	length = (arg.range_querries/ 2);
 	m = 0;
-	for (; i < (arg.thread - 2); i++) {
+	j = 0;
+	for (; i < (arg.thread); i++) {
 
-		strcpy(th_info[i].filename, arg.sfile);
-		m = i*length;
+		strcpy(th_info[i].filename, arg.rfile);
+		m = j*length;
 
 		if (i == (arg.thread - 1)) {
-			th_info[i].task_no = i;
+			th_info[i].task_no = j;
 			th_info[i].task_len = (arg.range_querries - m);
 			th_info[i].task_key = m;
 		} else {
-			th_info[i].task_no = i;
+			th_info[i].task_no = j;
 			th_info[i].task_len = length;
 			th_info[i].task_key = m;
 		}
@@ -178,15 +200,25 @@ int main(int argc, char **argv)
 				printf("Error on creating the thread\n");
 				exit(0);
 		} else {
-			//printf("Create new search thread\n");
+			//printf("Create new range querry thread %d with length %d and start key %d\n", th_info[i].task_no, th_info[i].task_len, th_info[i].task_key);
 		}
+		j++;
 	}
 	
 	for (i = 0; i < arg.thread; i++) {
 		pthread_join(th[i], NULL);
 	}
 
+	printf("\n\n Range querry result:\n");
+	for (i = 0; i < 2; i++) {
+		for (j = 0; j < querry[i].size(); j++) {
+			printf("Range Querry by thread %d for %d to %d = %d\n",i, querry[i][j].start_key, querry[i][j].end_key, querry[i][j].node->key);
+		}
+	}
+
+	printf("\nInorder Tree\n");
 	print_tree(g_root);
+	free_tree(g_root);
 	printf("\n");
 
 	return 0;

@@ -151,7 +151,7 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 	//printf("Total number of insert elements = %d\n", arg_handler_t->total_insert_keys);
 
     arg_handler_t->range_querries = get_total_count(arg_handler_t->rfile);
-    //printf("Total number of range querries = %d\n", arg_handler_t->range_querries);
+    printf("Total number of range querries = %d\n", arg_handler_t->range_querries);
 
     arg_handler_t->total_search_keys = get_total_count(arg_handler_t->sfile);
     //printf("Total number of search elements = %d\n", arg_handler_t->total_search_keys);

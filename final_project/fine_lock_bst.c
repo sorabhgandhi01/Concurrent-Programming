@@ -1,7 +1,7 @@
 #include "fine_lock_bst.h"
 
 extern bst_node *g_root;
-extern pthread_mutex_t bst_lock;
+extern pthread_mutex_t bst_lock; //rw_lock
 extern vector <range> querry[2];
 
 bst_node *create_node(int key, int value)
@@ -27,7 +27,7 @@ void put_node(bst_node *root, int key, int value, int thread_num)
 {
 	if (root == NULL)
 	{
-		pthread_mutex_lock(&bst_lock);
+		pthread_mutex_lock(&bst_lock);  //rwlock_wrlock
 		if (g_root == NULL)
 		{
 			g_root = create_node(key, value);
@@ -126,70 +126,64 @@ bst_node *get_node(bst_node *root, int key)
 
 void range_querry(bst_node *root, int start_key, int end_key, int tid)
 {
-	bst_node *start_node = get_node(root, start_key);
-	bst_node *end_node = get_node(root, end_key);
+	if (root == NULL) {
+		return;
+	}
+
+	bst_node *start_node = get_node(NULL, start_key);
+	bst_node *end_node = get_node(NULL, end_key);
 
 	if (start_node == NULL) {
 		printf("Invalid Query. Node with key %d is not present in the tree\n", start_key);
+		return;
 	} else if (end_node == NULL) {
 		printf("Invalid Query. Node with key %d is not present in the tree\n", end_key);
+		return;
 	} else {
 		pthread_mutex_lock(&bst_lock);
-		pthread_mutex_lock(&start_node->lock);
+		pthread_mutex_lock(&root->lock);
 		pthread_mutex_unlock(&bst_lock);
-		printf("Range Query result for key %d to %d:\n", start_key, end_key);
-		print_nodes_inhirarchy(start_node, start_key, end_key, tid);
+		//printf("Range query result for %d to %d\n", start_key, end_key);
+		get_nodes_inrange(root, start_key, end_key, tid);
 	}
 }
 
-void print_nodes_inhirarchy(bst_node *root, int start_key, int end_key, int tid)
+void get_nodes_inrange(bst_node *root, int start_key, int end_key, int tid)
 {
 	if (root == NULL)
 	{
-		printf("Invalid Query. Node with key %d is not present in the tree\n", end_key);
-		pthread_mutex_unlock(&root->lock);
+		//pthread_mutex_unlock(&root->lock);
 		return;
 	}
 
-	if (end_key == root->key)
+	if (start_key < root->key)
 	{
-		printf("Node with key %d contains value %d\n", root->key, root->value);
-		querry[tid].push_back({start_key, end_key, root});
-		pthread_mutex_unlock(&root->lock);
-		return;
-	}
-	else if (end_key < root->key)
-	{
-		if (root->left == NULL)
+		if (root->left != NULL)
 		{
-			printf("Invalid Query. Node with key %d is not present in the tree\n", end_key);
-			pthread_mutex_unlock(&root->lock);
-			return;
-		} else {
 			pthread_mutex_lock(&root->left->lock);
-			printf("Node with key %d contains value %d\n", root->key, root->value);
-			querry[tid].push_back({start_key, end_key, root});
-			pthread_mutex_unlock(&root->lock);
-			print_nodes_inhirarchy(root->left, start_key, end_key, tid);
-		}
-	}
-	else if (end_key > root->key)
-    {
-        if (root->right == NULL)
-        {
-            printf("Invalid Query. Node with key %d is not present in the tree\n", end_key);
-            pthread_mutex_unlock(&root->lock);
-            return;
-        } else {
-            pthread_mutex_lock(&root->right->lock);
-            printf("Node with key %d contains value %d\n", root->key, root->value);
-            querry[tid].push_back({start_key, end_key, root});
-            pthread_mutex_unlock(&root->lock);
-            print_nodes_inhirarchy(root->right, start_key, end_key, tid);
-        }
-    } else {
+		} 
+			
 		pthread_mutex_unlock(&root->lock);
+		get_nodes_inrange(root->left, start_key, end_key, tid);
+		
 	}
+
+	if ((start_key <= root->key) && (end_key >= root->key))
+	{
+		//printf("-->%d  %d to %d\n",tid, root->key, root->value);
+		querry[tid].push_back({start_key, end_key, root});
+	}
+	
+	if (end_key > root->key)
+    {
+        if (root->right != NULL)
+        {
+        	pthread_mutex_lock(&root->right->lock);
+        } 
+        
+        pthread_mutex_unlock(&root->lock);
+        get_nodes_inrange(root->right, start_key, end_key, tid);
+    }
 }
 
 void print_tree(bst_node *root)
@@ -202,3 +196,13 @@ void print_tree(bst_node *root)
 	print_tree(root->right);
 
 }
+
+
+void free_tree(bst_node *root)
+{
+	if (root != NULL) {
+        free_tree(root->right);
+        free_tree(root->left);
+        free(root);
+    }
+ }
