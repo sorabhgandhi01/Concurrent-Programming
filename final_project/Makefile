@@ -7,7 +7,7 @@ tree: main.c helper.c fine_lock_bst.c rw_lock_bst.c
 	g++ -I. -o tree main.c helper.c fine_lock_bst.c rw_lock_bst.c -pthread
 
 test: unit_test.c helper.c fine_lock_bst.c
-	g++ -Wall -I. -o test unit_test.c helper.c fine_lock_bst.c -pthread
+	g++ -I. -o test unit_test.c helper.c fine_lock_bst.c -pthread
 
 clean:
 	rm -f file tree test *.o
