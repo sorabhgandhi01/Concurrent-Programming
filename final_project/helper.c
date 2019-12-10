@@ -100,16 +100,22 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
         {"search", required_argument, 0, 's'},
         {"range", required_argument, 0, 'r'},
         {"lock", required_argument, 0, 'l'},
+        {"help", optional_argument, 0, 'h'},
         {0, 0, 0, 0}
     };
 
     arg_handler_t->is_rw_lock_set = false;
 
-    while ((c = getopt_long(argc, argv, "i:s:t:r:", opt, 0)) != -1)
+    while ((c = getopt_long(argc, argv, "hi:s:t:r:", opt, 0)) != -1)
     {
 
         switch (c)
         {
+            case 'h':
+                printf("Usage: ./tree -i [insert filename] -s [search filename] -r [range querry filename] -t [Number of threads] --lock=[lock name]\n");
+                exit(0);
+                break;
+
             case 'i':
 				arg_handler_t->ifile = optarg;
                 //printf("The input insert filename is %s\n", arg_handler_t->ifile);
@@ -151,7 +157,7 @@ int arg_parser(int argc, char **argv, struct arg_handler *arg_handler_t)
 	//printf("Total number of insert elements = %d\n", arg_handler_t->total_insert_keys);
 
     arg_handler_t->range_querries = get_total_count(arg_handler_t->rfile);
-    printf("Total number of range querries = %d\n", arg_handler_t->range_querries);
+    //printf("Total number of range querries = %d\n", arg_handler_t->range_querries);
 
     arg_handler_t->total_search_keys = get_total_count(arg_handler_t->sfile);
     //printf("Total number of search elements = %d\n", arg_handler_t->total_search_keys);

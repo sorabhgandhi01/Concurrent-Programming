@@ -122,6 +122,8 @@ bst_node *get_node(bst_node *root, int key)
 		pthread_mutex_unlock(&root->lock);
 		return NULL;
 	}
+
+	return NULL;
 }
 
 void range_querry(bst_node *root, int start_key, int end_key, int tid)
@@ -135,10 +137,8 @@ void range_querry(bst_node *root, int start_key, int end_key, int tid)
 
 	if (start_node == NULL) {
 		printf("Invalid Query. Node with key %d is not present in the tree\n", start_key);
-		return;
 	} else if (end_node == NULL) {
 		printf("Invalid Query. Node with key %d is not present in the tree\n", end_key);
-		return;
 	} else {
 		pthread_mutex_lock(&bst_lock);
 		pthread_mutex_lock(&root->lock);
@@ -152,8 +152,17 @@ void get_nodes_inrange(bst_node *root, int start_key, int end_key, int tid)
 {
 	if (root == NULL)
 	{
-		//pthread_mutex_unlock(&root->lock);
-		return;
+		pthread_mutex_lock(&bst_lock);
+		if (g_root == NULL)
+		{
+			//printf("Searched failed for node with key %d\n", key);
+			pthread_mutex_unlock(&bst_lock);
+			return;
+		}
+
+		pthread_mutex_lock(&g_root->lock);
+		root = g_root;
+		pthread_mutex_unlock(&bst_lock);
 	}
 
 	if (start_key < root->key)
@@ -161,10 +170,10 @@ void get_nodes_inrange(bst_node *root, int start_key, int end_key, int tid)
 		if (root->left != NULL)
 		{
 			pthread_mutex_lock(&root->left->lock);
+			pthread_mutex_unlock(&root->lock);
+			get_nodes_inrange(root->left, start_key, end_key, tid);
+			pthread_mutex_lock(&root->lock);
 		} 
-			
-		pthread_mutex_unlock(&root->lock);
-		get_nodes_inrange(root->left, start_key, end_key, tid);
 		
 	}
 
@@ -179,11 +188,14 @@ void get_nodes_inrange(bst_node *root, int start_key, int end_key, int tid)
         if (root->right != NULL)
         {
         	pthread_mutex_lock(&root->right->lock);
+        	pthread_mutex_unlock(&root->lock);
+        	get_nodes_inrange(root->right, start_key, end_key, tid);
+        	pthread_mutex_lock(&root->lock);
         } 
-        
-        pthread_mutex_unlock(&root->lock);
-        get_nodes_inrange(root->right, start_key, end_key, tid);
     }
+
+    pthread_mutex_unlock(&root->lock);
+
 }
 
 void print_tree(bst_node *root)
@@ -203,6 +215,7 @@ void free_tree(bst_node *root)
 	if (root != NULL) {
         free_tree(root->right);
         free_tree(root->left);
+        pthread_mutex_destroy(&root->lock);
         free(root);
     }
  }
