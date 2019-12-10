@@ -123,7 +123,7 @@ bst_node *get_node(bst_node *root, int key)
 		return NULL;
 	}
 
-	return NULL;
+	//return NULL;
 }
 
 void range_querry(bst_node *root, int start_key, int end_key, int tid)

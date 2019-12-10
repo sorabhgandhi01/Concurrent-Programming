@@ -108,7 +108,7 @@ void *range_handler(void *arg)
 	{
 		fscanf(fp, "%d %d\n", &start_key, &end_key);
 		if (end_key > start_key) {
-			printf("Invoking range query result for %d to %d\n", start_key, end_key);
+			//printf("Invoking range query result for %d to %d\n", start_key, end_key);
 			get_nodes_inrange(NULL, start_key, end_key, th_info->task_no);
 		}
 	}

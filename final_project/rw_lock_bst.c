@@ -124,7 +124,7 @@ bst_noderw *get_node_rw(bst_noderw *root, int key)
 		return NULL;
 	}
 
-	return NULL;
+	//return NULL;
 }
 
 void range_querry_rw(bst_noderw *root, int start_key, int end_key, int tid)
