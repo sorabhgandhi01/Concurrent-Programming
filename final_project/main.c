@@ -52,6 +52,7 @@ pthread_rwlock_t bst_rwlock;
 
 struct timespec start, end1;
 
+//thread handler for put operation
 void *put_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -80,6 +81,7 @@ void *put_handler(void *arg)
 	return 0;
 }
 
+//thread handler for get operation
 void *get_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -116,6 +118,7 @@ void *get_handler(void *arg)
     return 0;
 }
 
+//thread handler for range querry operation
 void *range_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -147,6 +150,7 @@ void *range_handler(void *arg)
 	return 0;
 }
 
+//thread handler for put operation with read-write lock
 void *rw_put_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -175,6 +179,7 @@ void *rw_put_handler(void *arg)
 	return 0;
 }
 
+//thread handler for get operation with read-write lock
 void *rw_get_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -211,6 +216,7 @@ void *rw_get_handler(void *arg)
     return 0;
 }
 
+//thread handler for range-query operation with read-write lock
 void *rw_range_handler(void *arg)
 {
 	struct thread_info *th_info = (struct thread_info *)arg;
@@ -247,7 +253,7 @@ void *rw_range_handler(void *arg)
 int main(int argc, char **argv)
 {
 	struct arg_handler arg;
-	arg_parser(argc, argv, &arg);
+	arg_parser(argc, argv, &arg);	//parse the command line argument
 
 	if (arg.total_insert_keys < arg.thread) {
 		arg.thread = (arg.total_insert_keys / 2);
@@ -264,6 +270,7 @@ int main(int argc, char **argv)
 	int length = (arg.total_insert_keys / (arg.thread - 4));
 	int m = 0, j = 0;
 
+	//check if the lock is set to rw_lock
 	if (arg.is_rw_lock_set != true) {
 
 		pthread_mutex_init(&bst_lock, NULL);
@@ -284,6 +291,7 @@ int main(int argc, char **argv)
 				th_info[i].task_key = m;
 			}
 
+			//invoke the put threads
 			if (pthread_create(&th[i], NULL, put_handler, (void *)&th_info[i]) != 0) 
 			{
 				printf("Error on creating the thread\n");
@@ -311,7 +319,7 @@ int main(int argc, char **argv)
 				th_info[i].task_key = m;
 			}
 
-
+			//invoke the get threads
 			if (pthread_create(&th[i], NULL, get_handler, (void *)&th_info[i]) != 0) {
 					printf("Error on creating the thread\n");
 					exit(0);
@@ -339,6 +347,7 @@ int main(int argc, char **argv)
 				th_info[i].task_key = m;
 			}
 
+			//invoke the range querry threads
 			if (pthread_create(&th[i], NULL, range_handler, (void *)&th_info[i]) != 0) {
 					printf("Error on creating the thread\n");
 					exit(0);
@@ -356,6 +365,7 @@ int main(int argc, char **argv)
 
 		pthread_mutex_destroy(&bst_lock);
 
+		//print the entire range querry result
 		printf("\n\n Range querry result:\n");
 		for (i = 0; i < 2; i++) {
 			for (j = 0; j < querry[i].size(); j++) {
@@ -364,8 +374,8 @@ int main(int argc, char **argv)
 		}
 
 		printf("\nInorder Tree\n");
-		print_tree(g_root);
-		free_tree(g_root);
+		print_tree(g_root);			//print the entire tree
+		free_tree(g_root);		//free the tree
 
 		unsigned long long elapsed_ns;
 		elapsed_ns = (end1.tv_sec-start.tv_sec)*1000000000 + (end1.tv_nsec-start.tv_nsec);

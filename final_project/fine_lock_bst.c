@@ -4,6 +4,7 @@ extern bst_node *g_root;
 extern pthread_mutex_t bst_lock; //rw_lock
 extern vector <range> querry[2];
 
+//create a new bst node
 bst_node *create_node(int key, int value)
 {
 	bst_node *node = (bst_node *)malloc(sizeof(bst_node));
@@ -18,11 +19,13 @@ bst_node *create_node(int key, int value)
 	return node;
 }
 
+//update the value of the given node
 void update_value(bst_node *node, int value)
 {
 	node->value = value;
 }
 
+//insert the key-value pair in the tree
 void put_node(bst_node *root, int key, int value, int thread_num)
 {
 	if (root == NULL)
@@ -71,6 +74,7 @@ void put_node(bst_node *root, int key, int value, int thread_num)
 	}
 }
 
+//obtain the node from the tree based on the key
 bst_node *get_node(bst_node *root, int key)
 {
 	if (root == NULL)
@@ -148,6 +152,7 @@ void range_querry(bst_node *root, int start_key, int end_key, int tid)
 	}
 }
 
+//fetch all the nodes in the given range
 void get_nodes_inrange(bst_node *root, int start_key, int end_key, int tid)
 {
 	if (root == NULL)
